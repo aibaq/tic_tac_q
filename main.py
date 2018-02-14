@@ -2,7 +2,6 @@ import json
 import random
 import time
 import os
-from copy import deepcopy
 
 
 clear = lambda: os.system('clear')
@@ -10,13 +9,17 @@ clear = lambda: os.system('clear')
 
 class QTable(object):
 
-    def __init__(self, game, unit, size=3, alpha=0.95, gamma=0.95, eps=0.95):
+    def __init__(self, game, unit, alpha=0.95, gamma=0.95, eps=0.95):
         """
         :state: key: (pos_x, pos_y, mark)
+        :game: reference to game object
+        :unit: reference to unit object
+        :alpha: coefficient
+        :gamma: coefficient
+        :eps: error of random
         """
         self.game = game
         self.unit = unit
-        self.size = size
         self.alpha = alpha
         self.gamma = gamma
         self.eps = eps
@@ -25,10 +28,11 @@ class QTable(object):
     @staticmethod
     def from_json(game, unit, body):
         q_table = QTable(game, unit)
-        q_table.size = body['size']
         q_table.alpha = body['alpha']
         q_table.gamma = body['gamma']
         q_table.eps = body['eps']
+
+        """Couldn't dump tuple key other way"""
         state = body['state']
         for k, v in state.items():
             key = json.loads(k)
@@ -38,6 +42,7 @@ class QTable(object):
                 elif key[i] == -20:
                     key[i] = Unit.O
             q_table.state[tuple(key)] = v
+
         return q_table
 
     def json(self):
@@ -51,7 +56,6 @@ class QTable(object):
                     key[i] = -20
             state[repr(key)] = v
         obj = {
-            'size': self.size,
             'alpha': self.alpha,
             'gamma': self.gamma,
             'eps': self.eps,
@@ -59,11 +63,7 @@ class QTable(object):
         }
         return obj
 
-    def run_model(self, silent=0, reward=-1):
-        if not silent:
-            print(self.unit.prev_state)
-            print(self.unit.state)
-
+    def run_model(self, reward=-1):
         if self.unit.prev_state not in self.state:
             self.state[self.unit.prev_state] = 0
 
@@ -75,10 +75,10 @@ class QTable(object):
             nvec.append(self.state[cstate])
         if nvec:
             nvec = max(nvec)
-            self.state[self.unit.prev_state] = (self.state[self.unit.prev_state]
-                                                + self.alpha * (reward
-                                                                - self.state[self.unit.prev_state]
-                                                                + self.gamma * nvec))
+            self.state[self.unit.prev_state] = (
+                self.state[self.unit.prev_state] + self.alpha * (
+                    reward - self.state[self.unit.prev_state]
+                    + self.gamma * nvec))
 
     def get_next_move(self):
         if random.random() < self.eps:
@@ -104,6 +104,12 @@ class Unit(object):
     X = 'X'
 
     def __init__(self, game, unit_type=BOT, mark=X, name='Player', alpha=0.95, gamma=0.95, eps=0.95):
+        """
+        :game: reference to game object
+        :unit_type: Bot or player
+        :mark: mark to display on board
+        :name: name to display
+        """
         self.name = name
         self.q_table = QTable(game=game, unit=self, alpha=alpha, gamma=gamma, eps=eps)
         self.game = game
@@ -229,6 +235,12 @@ class Game(object):
         return obj
 
     def __init__(self, filename, size=3, iterations=30000, sleep=True):
+        """
+        :filename: serialization file
+        :size: size of table
+        :iterations: Number of iterations to stop
+        :sleep: Turn slow mode when True
+        """
         self.sleep = sleep
         self.filename = filename
         self.iteration = 0
@@ -373,6 +385,12 @@ if __name__ == '__main__':
     player = Player(game=game, unit_type=Unit.PLAYER, mark=Unit.X, name='Player')
     bot_aiba = Bot(game=game, unit_type=Unit.BOT, mark=Unit.O, name='Bot AIBA', alpha=0.95, gamma=0.95, eps=0.95)
     bot_meshok = Bot(game=game, unit_type=Unit.BOT, mark=Unit.X, name='Bot Meshok', alpha=1.2, gamma=0.8, eps=0.9)
-    game.init_users(unit1=player, unit2=bot_aiba)
+    
+    game.init_users(unit1=bot_meshok, unit2=bot_aiba)
     game.deserialize(unit1=False, unit2=True)
+
+    # Uncomment when playing against bot
+    # game.init_users(unit1=player, unit2=bot_aiba)
+    # game.deserialize(unit1=False, unit2=True)
+
     game.start()

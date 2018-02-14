@@ -3,8 +3,10 @@ import random
 import time
 import os
 
-
-clear = lambda: os.system('clear')
+try:
+    clear = lambda: os.system('clear')
+except:
+    clear = lambda: os.system('cls')
 
 
 class QTable(object):
@@ -245,7 +247,7 @@ class Game(object):
         self.filename = filename
         self.iteration = 0
         self.size = size
-        self.table = self.init_table()
+        self.init_table()
         self.iterations = iterations
 
     def init_users(self, unit1, unit2):
@@ -381,16 +383,17 @@ class Game(object):
 
 
 if __name__ == '__main__':
-    game = Game(filename='first_game.json', sleep=False, iterations=1000)
+    game = Game(filename='first_game.json', sleep=True, iterations=1000)
     player = Player(game=game, unit_type=Unit.PLAYER, mark=Unit.X, name='Player')
     bot_aiba = Bot(game=game, unit_type=Unit.BOT, mark=Unit.O, name='Bot AIBA', alpha=0.95, gamma=0.95, eps=0.95)
     bot_meshok = Bot(game=game, unit_type=Unit.BOT, mark=Unit.X, name='Bot Meshok', alpha=1.2, gamma=0.8, eps=0.9)
-    
-    game.init_users(unit1=bot_meshok, unit2=bot_aiba)
-    game.deserialize(unit1=False, unit2=True)
 
-    # Uncomment when playing against bot
-    # game.init_users(unit1=player, unit2=bot_aiba)
+    # Uncomment when playing bot VS bot    
+    # game.init_users(unit1=bot_meshok, unit2=bot_aiba)
     # game.deserialize(unit1=False, unit2=True)
+
+    # Uncomment when playing player VS bot
+    game.init_users(unit1=player, unit2=bot_aiba)
+    game.deserialize(unit1=False, unit2=True)
 
     game.start()

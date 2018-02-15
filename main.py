@@ -217,7 +217,7 @@ class Game(object):
                     self.unit2 = Unit.from_json(self, body['unit2'])
                 self.iteration = body['iteration']
                 self.size = body['size']
-                self.table = body['table']
+                self.desk = body['desk']
                 self.iterations = body['iterations']
                 self.turn = Unit.from_json(self, body['turn'])
                 print('Deserialization success')
@@ -230,7 +230,7 @@ class Game(object):
             'unit2': self.unit2.json(),
             'iteration': self.iteration,
             'size': self.size,
-            'table': self.table,
+            'desk': self.desk,
             'iterations': self.iterations,
             'turn': self.turn.json()
         }
@@ -389,11 +389,11 @@ if __name__ == '__main__':
     bot_meshok = Bot(game=game, unit_type=Unit.BOT, mark=Unit.X, name='Bot Meshok', alpha=1.2, gamma=0.8, eps=0.9)
 
     # Uncomment when playing bot VS bot    
-    # game.init_users(unit1=bot_meshok, unit2=bot_aiba)
-    # game.deserialize(unit1=False, unit2=True)
+    game.init_users(unit1=bot_meshok, unit2=bot_aiba)
+    game.deserialize(unit1=False, unit2=True)
 
     # Uncomment when playing player VS bot
-    game.init_users(unit1=player, unit2=bot_aiba)
-    game.deserialize(unit1=False, unit2=True)
+    # game.init_users(unit1=player, unit2=bot_aiba)
+    # game.deserialize(unit1=False, unit2=True)
 
     game.start()
